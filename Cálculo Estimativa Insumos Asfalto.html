@@ -11,29 +11,31 @@
         max-width: 100%;
         padding: 20px;
     }
+
+    /* ---- Título, texto e campos ---- */
     h2 { 
-        font-size: 2.5rem; 
+        font-size: 2.8rem; 
         text-align: center; 
         margin-bottom: 20px; 
     }
     p { 
-        font-size: 1.6rem; 
+        font-size: 1.8rem; 
         text-align: center; 
     }
     input { 
-        padding: 24px; 
+        padding: 26px; 
         margin: 20px 0; 
         width: 100%; 
-        font-size: 2rem; 
+        font-size: 2.2rem; 
         border-radius: 12px;
         border: 1px solid #ccc;
         box-sizing: border-box;
         text-align: center;
     }
     button { 
-        padding: 24px; 
+        padding: 26px; 
         width: 100%; 
-        font-size: 2rem; 
+        font-size: 2.2rem; 
         border-radius: 12px;
         background-color: #007bff; 
         color: #fff; 
@@ -45,34 +47,34 @@
     button:hover {
         background-color: #0056b3;
     }
+
+    /* ---- Resultados (menores e compactos) ---- */
     .result { 
         background: #fff; 
-        padding: 20px; 
+        padding: 15px; 
         margin-top: 20px; 
         border-radius: 12px; 
-        font-size: 1.6rem;
+        font-size: 1.4rem;
         box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
 
-    /* Força o modo app no celular */
+    /* Ajuste automático para celular */
     @media (max-width: 768px) {
-        body {
-            background: #e9ecef;
-        }
         .container {
-            padding: 30px 15px;
+            padding: 25px 15px;
         }
         h2 { font-size: 3rem; }
-        p { font-size: 1.8rem; }
+        p { font-size: 2rem; }
         input, button {
-            font-size: 2.2rem;
+            font-size: 2.4rem;
             padding: 28px;
         }
         .result {
-            font-size: 1.8rem;
+            font-size: 1.5rem;
         }
     }
 </style>
+
 
 
 
