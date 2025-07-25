@@ -3,52 +3,77 @@
 <style>
     body { 
         font-family: Arial, sans-serif; 
-        max-width: 800px; 
-        margin: 20px auto; 
-        padding: 10px;
+        margin: 0; 
+        padding: 0;
+        background: #f4f4f4;
     }
-    input, button { 
-        padding: 18px; 
-        margin: 12px 0; 
+    .container {
+        max-width: 100%;
+        padding: 20px;
+    }
+    h2 { 
+        font-size: 2.5rem; 
+        text-align: center; 
+        margin-bottom: 20px; 
+    }
+    p { 
+        font-size: 1.6rem; 
+        text-align: center; 
+    }
+    input { 
+        padding: 24px; 
+        margin: 20px 0; 
         width: 100%; 
-        font-size: 1.4rem; 
-        border-radius: 10px;
+        font-size: 2rem; 
+        border-radius: 12px;
         border: 1px solid #ccc;
         box-sizing: border-box;
+        text-align: center;
     }
     button { 
+        padding: 24px; 
+        width: 100%; 
+        font-size: 2rem; 
+        border-radius: 12px;
         background-color: #007bff; 
         color: #fff; 
         border: none; 
         cursor: pointer; 
         font-weight: bold;
+        margin-top: 10px;
     }
     button:hover {
         background-color: #0056b3;
     }
     .result { 
-        background: #f7f7f7; 
+        background: #fff; 
         padding: 20px; 
         margin-top: 20px; 
-        border-radius: 10px; 
-        font-size: 1.2rem;
+        border-radius: 12px; 
+        font-size: 1.6rem;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-    h2 { font-size: 2rem; text-align: center; }
-    p { font-size: 1.3rem; }
 
-    /* Ajuste específico para telas pequenas */
+    /* Força o modo app no celular */
     @media (max-width: 768px) {
         body {
-            padding: 20px;
+            background: #e9ecef;
         }
+        .container {
+            padding: 30px 15px;
+        }
+        h2 { font-size: 3rem; }
+        p { font-size: 1.8rem; }
         input, button {
-            font-size: 1.6rem;
-            padding: 22px;
+            font-size: 2.2rem;
+            padding: 28px;
         }
-        h2 { font-size: 2.2rem; }
-        p { font-size: 1.4rem; }
+        .result {
+            font-size: 1.8rem;
+        }
     }
 </style>
+
 
 
 <head>
@@ -62,12 +87,13 @@
     </style>
 </head>
 <body>
-    <h2>Calculadora de Produção de Asfalto</h2>
-    <p>Informe o valor total disponível para compra de insumos:</p>
-    <input type="text" id="valorDisponivel" placeholder="Ex: 50.000,00" />
-    <button onclick="calcular()">Calcular</button>
-
-    <div id="resultado" class="result"></div>
+    <div class="container">
+        <h2>Calculadora de Produção de Asfalto</h2>
+        <p>Informe o valor total disponível para compra de insumos:</p>
+        <input type="text" id="valorDisponivel" placeholder="Ex: 50.000,00" />
+        <button onclick="calcular()">Calcular</button>
+        <div id="resultado" class="result"></div>
+    </div>
 
     <script>
         // Função para formatar número no padrão BR
