@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Calculadora de Produção de Asfalto</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; }
+        input, button { padding: 8px; margin: 5px 0; width: 100%; font-size: 1rem; }
+        .result { background: #f7f7f7; padding: 15px; margin-top: 10px; border-radius: 8px; }
+        h3 { margin-top: 15px; }
+    </style>
+</head>
+<body>
+    <h2>Calculadora de Produção de Asfalto</h2>
+    <p>Informe o valor total disponível para compra de insumos:</p>
+    <input type="text" id="valorDisponivel" placeholder="Ex: 50.000,00" />
+    <button onclick="calcular()">Calcular</button>
+
+    <div id="resultado" class="result"></div>
+
+    <script>
+        // Função para formatar número no padrão BR
+        function formatarBR(valor) {
+            return valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        // Função para desformatar o valor digitado (remover pontos e trocar vírgula por ponto)
+        function desformatarBR(valor) {
+            return parseFloat(valor.replace(/\./g, '').replace(',', '.')) || 0;
+        }
+
+        // Aplicar formatação automática no campo de entrada
+        document.getElementById('valorDisponivel').addEventListener('input', function (e) {
+            let valor = this.value.replace(/\D/g, ''); // mantém apenas números
+            valor = (parseInt(valor, 10) / 100).toFixed(2); // ajusta para 2 casas decimais
+            this.value = parseFloat(valor).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        });
+
+        function calcular() {
+            let valorDigitado = document.getElementById('valorDisponivel').value;
+            let valorDisponivel = desformatarBR(valorDigitado);
+            if (isNaN(valorDisponivel) || valorDisponivel <= 0) {
+                alert("Digite um valor válido!");
+                return;
+            }
+
+            // Parâmetros fixos
+            let custoPorTonelada = 420;
+            let m3PorTonelada = 0.4;
+
+            // Percentuais dos insumos
+            let percBrita = 0.17;
+            let percAreia = 0.10;
+            let percEmulsao = 0.73;
+
+            // Quantidade de toneladas e m³
+            let toneladas = valorDisponivel / custoPorTonelada;
+            let m3Asfalto = toneladas * m3PorTonelada;
+
+            // Custos por insumo
+            let valorBrita = valorDisponivel * percBrita;
+            let valorAreia = valorDisponivel * percAreia;
+            let valorEmulsao = valorDisponivel * percEmulsao;
+
+            // Quantidade de insumos (kg)
+            let kgBrita = toneladas * 460;
+            let kgAreia = toneladas * 460;
+            let kgEmulsao = toneladas * 80;
+
+            // Área para diferentes espessuras (m²)
+            let area3cm = m3Asfalto / 0.03;
+            let area4cm = m3Asfalto / 0.04;
+            let area5cm = m3Asfalto / 0.05;
+
+            // Comprimento para largura 7m
+            function comprimento(area, largura) {
+                return (area / largura);
+            }
+            let comp7m_3cm = comprimento(area3cm, 7);
+            let comp7m_4cm = comprimento(area4cm, 7);
+            let comp7m_5cm = comprimento(area5cm, 7);
+
+            // Custo por m³ e por m²
+            let custoPorM3 = custoPorTonelada / m3PorTonelada;
+            let custoPorM2_3cm = custoPorM3 * 0.03;
+            let custoPorM2_4cm = custoPorM3 * 0.04;
+            let custoPorM2_5cm = custoPorM3 * 0.05;
+
+            // Exibir resultados
+            document.getElementById('resultado').innerHTML = `
+                <h3>Resultados:</h3>
+                <p><strong>Asfalto produzido:</strong> ${formatarBR(m3Asfalto)} m³ (${formatarBR(toneladas)} toneladas)</p>
+                
+                <h3>Área pavimentada:</h3>
+                <ul>
+                    <li>Espessura 3 cm: ${formatarBR(area3cm)} m²</li>
+                    <li>Espessura 4 cm: ${formatarBR(area4cm)} m²</li>
+                    <li>Espessura 5 cm: ${formatarBR(area5cm)} m²</li>
+                </ul>
+
+                <h3>Comprimento (metros lineares - largura 7m):</h3>
+                <ul>
+                    <li>Largura 7m (Espessura 3 cm): ${formatarBR(comp7m_3cm)} m</li>
+                    <li>Largura 7m (Espessura 4 cm): ${formatarBR(comp7m_4cm)} m</li>
+                    <li>Largura 7m (Espessura 5 cm): ${formatarBR(comp7m_5cm)} m</li>
+                </ul>
+
+<h3>Custos:</h3>
+<ul>
+    <li>Valor por m³: R$ ${formatarBR(custoPorM3)}</li>
+    <li>Valor por m² (Espessura 3 cm): R$ ${formatarBR(custoPorM2_3cm)}</li>
+    <li>Valor por m² (Espessura 4 cm): R$ ${formatarBR(custoPorM2_4cm)}</li>
+    <li>Valor por m² (Espessura 5 cm): R$ ${formatarBR(custoPorM2_5cm)}</li>
+</ul>
+
+
+                <h3>Valores por insumo:</h3>
+                <ul>
+                    <li>Brita 19: R$ ${formatarBR(valorBrita)} (${formatarBR(kgBrita)} kg)</li>
+                    <li>Areia/pó de pedra: R$ ${formatarBR(valorAreia)} (${formatarBR(kgAreia)} kg)</li>
+                    <li>Emulsão asfáltica: R$ ${formatarBR(valorEmulsao)} (${formatarBR(kgEmulsao)} kg)</li>
+                </ul>
+            `;
+        }
+    </script>
+</body>
+</html>
