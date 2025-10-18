@@ -11,34 +11,38 @@
       padding: 0;
       background: #f4f4f4;
     }
-    .container { max-width: 880px; margin: 0 auto; padding: 20px; }
+    .container { max-width: 920px; margin: 0 auto; padding: 20px; }
 
     h2 { font-size: 1.5rem; text-align: center; margin-bottom: 8px; }
     p { font-size: 1rem; text-align: center; margin-bottom: 12px; }
 
-    /* ---- Campos menores ---- */
-    input { 
-      padding: 15px; 
-      margin: 10px 0; 
+    /* ---- Cards / Layout ---- */
+    .card { background:#fff; border-radius:12px; padding:16px; box-shadow:0 0 10px rgba(0,0,0,.07); }
+    .grid { display:grid; grid-template-columns: repeat(12, 1fr); gap:12px; }
+    .col-12{grid-column: span 12;} .col-6{grid-column: span 6;} .col-4{grid-column: span 4;} .col-3{grid-column: span 3;}
+
+    label { display:block; font-size:.9rem; margin-bottom:6px; color:#333; }
+    input[type="text"], input[type="number"] { 
+      padding: 12px; 
       width: 100%; 
-      font-size: 1.2rem; 
+      font-size: 1.05rem; 
       border-radius: 8px;
       border: 2px solid #ccc;
       box-sizing: border-box;
       text-align: center;
       background:#fff;
     }
+    input[readonly]{ background:#f5f5f5; }
     button { 
-      padding: 15px; 
+      padding: 14px; 
       width: 100%; 
-      font-size: 1.2rem; 
+      font-size: 1.1rem; 
       border-radius: 8px;
       background-color: #007bff; 
       color: #fff; 
       border: none; 
       cursor: pointer; 
       font-weight: bold;
-      margin-top: 10px;
     }
     button:hover { background-color: #0056b3; }
 
@@ -51,22 +55,59 @@
       line-height: 1.45;
       box-shadow: 0 0 10px rgba(0,0,0,0.08);
     }
-    .muted { color:#555; font-size: .9rem; }
+    .muted { color:#555; font-size: .9rem; text-align:center; margin-top:8px; }
+
+    @media (max-width: 768px) {
+      .grid { gap:10px; }
+      .col-6, .col-4, .col-3 { grid-column: span 12; }
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>Calculadora de Produção de Asfalto</h2>
-    <p>Informe o valor total disponível para compra de insumos:</p>
+    <p>Preencha o orçamento, ajuste o traço e calcule a produção estimada.</p>
 
-    <input type="text" id="valorDisponivel" placeholder="Ex: 50.000,00" inputmode="numeric" />
-    <button id="btnCalcular">Calcular</button>
+    <div class="card" style="margin-bottom:12px;">
+      <div class="grid">
+        <div class="col-12">
+          <label for="valorDisponivel">Valor disponível (R$)</label>
+          <input type="text" id="valorDisponivel" placeholder="Ex: 50.000,00" inputmode="numeric" />
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px;">
+      <h3 style="margin:0 0 10px 0; font-size:1.05rem;">Traço por massa</h3>
+      <div class="grid">
+        <div class="col-4">
+          <label for="percBrita">% Brita 19 (sobre o agregado)</label>
+          <input type="number" id="percBrita" min="0" max="100" step="0.1" value="46" />
+        </div>
+        <div class="col-4">
+          <label for="percPo">% Pó de pedra (complemento até 100%)</label>
+          <input type="number" id="percPo" readonly />
+        </div>
+        <div class="col-4">
+          <label for="percEmulsao">% Emulsão (sobre o agregado)</label>
+          <input type="number" id="percEmulsao" min="0" max="20" step="0.1" value="8" />
+        </div>
+      </div>
+      <p class="muted">Regras do traço: (1) Brita + Pó = <strong>100% do agregado</strong> (base = 1.000 kg). (2) Emulsão = percentual <em>sobre o agregado</em>. (3) Cada 1% de emulsão adiciona <strong>10 kg</strong> ao lote (1.000 kg de agregado → mistura = 1.000 kg + emulsão).</p>
+    </div>
+
+    <div class="card" style="margin-bottom:12px;">
+      <div class="grid">
+        <div class="col-12"><button id="btnCalcular">Calcular</button></div>
+      </div>
+    </div>
 
     <div id="resultado" class="result"></div>
-    <p class="muted">Parâmetros do traço: 46% brita 19, 46% pó de pedra, 8% emulsão.</p>
+    <p class="muted">Preços considerados (R$/t): Brita 19 = 120,00 • Pó = 75,00 • Emulsão = 3.900,00. Densidade adotada: <strong>1 m³ = 1,90 t</strong> (logo, 1 t ≈ 0,5263 m³).</p>
   </div>
 
   <script>
+    // ------- Utilidades de formatação BR -------
     function formatarBR(valor) {
       return (isFinite(valor) ? Number(valor) : 0).toLocaleString('pt-BR', {
         minimumFractionDigits: 2,
@@ -80,24 +121,33 @@
       return isNaN(num) ? 0 : num;
     }
 
-    const precoTonBrita = 120.00;
-    const precoTonPo = 75.00;
-    const precoTonEmulsao = 3900.00;
+    // ------- Preços por tonelada dos insumos -------
+    const precoTonBrita = 120.00;     // R$/t
+    const precoTonPo = 75.00;         // R$/t (pó de pedra)
+    const precoTonEmulsao = 3900.00;  // R$/t
 
-    const fracBrita = 0.46;
-    const fracPo = 0.46;
-    const fracEmulsao = 0.08;
+    // ------- Conversões geométricas -------
+    // Nova densidade: 1 m³ = 1,90 t  =>  1 t = 1/1,90 m³ ≈ 0,526315789 m³
+    const m3PorTonelada = 1 / 1.90;
 
-    function custoPorToneladaMistura() {
-      return fracBrita * precoTonBrita + fracPo * precoTonPo + fracEmulsao * precoTonEmulsao;
-    }
-
-    const m3PorTonelada = 0.40;
-
-    function areaPorEspessura(m3, espessura_m) { return m3 / espessura_m; }
-    function comprimento(area, largura) { return area / largura; }
-
+    // ------- Elementos -------
     const campoValor = document.getElementById('valorDisponivel');
+    const percBritaInput = document.getElementById('percBrita');
+    const percPoInput = document.getElementById('percPo');
+    const percEmulsaoInput = document.getElementById('percEmulsao');
+
+    // Inicializa % pó de pedra
+    function atualizarPo() {
+      let b = Number(percBritaInput.value);
+      if (!isFinite(b)) b = 0;
+      if (b < 0) b = 0; if (b > 100) b = 100;
+      percPoInput.value = (100 - b).toFixed(1);
+    }
+    atualizarPo();
+
+    percBritaInput.addEventListener('input', atualizarPo);
+
+    // Formatar campo de dinheiro conforme digita
     campoValor.addEventListener('input', function () {
       const somenteDigitos = this.value.replace(/\D/g, '');
       const val = (parseInt(somenteDigitos || '0', 10) / 100).toFixed(2);
@@ -106,71 +156,134 @@
 
     document.getElementById('btnCalcular').addEventListener('click', calcular);
 
+    // Calcula custo por tonelada de mistura com base no traço definido
+    function custoPorToneladaMistura(percBrita, percEmulsao) {
+      // Base conforme sua regra: 1.000 kg de agregado (Brita + Pó = 100%)
+      const A = 1000; // kg de agregado por lote-base
+      const percPo = 100 - percBrita; // % sobre agregado
+
+      const massaBrita = A * (percBrita / 100);
+      const massaPo = A * (percPo / 100);
+      const massaEmulsao = 10 * percEmulsao; // kg (1% -> 10 kg)
+
+      // Custo do lote base (agregado + emulsão)
+      const custoLote = (massaBrita / 1000) * precoTonBrita
+                      + (massaPo / 1000) * precoTonPo
+                      + (massaEmulsao / 1000) * precoTonEmulsao;
+
+      // Massa total da mistura resultante do lote-base
+      const massaMistura = A + massaEmulsao; // kg
+
+      // Custo por 1 tonelada (1.000 kg) de mistura, normalizado pela massa da mistura
+      const custoTonMistura = custoLote * (1000 / massaMistura);
+      return { custoTonMistura, massaBrita, massaPo, massaEmulsao, massaMistura };
+    }
+
     function calcular() {
-      const valorDigitado = campoValor.value;
-      const valorDisponivel = desformatarBR(valorDigitado);
+      const valorDisponivel = desformatarBR(campoValor.value);
       if (!isFinite(valorDisponivel) || valorDisponivel <= 0) {
         alert('Digite um valor válido!');
         return;
       }
 
-      const custoTon = custoPorToneladaMistura();
-      const toneladas = valorDisponivel / custoTon;
-      const m3Asfalto = toneladas * m3PorTonelada;
+      let percBrita = Number(percBritaInput.value);
+      let percEmulsao = Number(percEmulsaoInput.value);
+      if (!isFinite(percBrita)) percBrita = 0;
+      if (!isFinite(percEmulsao)) percEmulsao = 0;
+      if (percBrita < 0) percBrita = 0; if (percBrita > 100) percBrita = 100;
+      if (percEmulsao < 0) percEmulsao = 0; if (percEmulsao > 50) percEmulsao = 50; // trava de segurança
 
-      const tBrita = toneladas * fracBrita;
-      const tPo = toneladas * fracPo;
-      const tEmulsao = toneladas * fracEmulsao;
+      const { custoTonMistura, massaBrita, massaPo, massaEmulsao, massaMistura } = custoPorToneladaMistura(percBrita, percEmulsao);
 
+      // Produção possível (em toneladas de mistura)
+      const toneladasMistura = valorDisponivel / custoTonMistura;
+      const m3Asfalto = toneladasMistura * m3PorTonelada;
+
+      // Proporções dos insumos na mistura (kg por kg de mistura)
+      const fracBritaNaMistura = massaBrita / massaMistura;
+      const fracPoNaMistura = massaPo / massaMistura;
+      const fracEmulsaoNaMistura = massaEmulsao / massaMistura;
+
+      // Toneladas totais de cada insumo para a produção calculada
+      const tBrita = toneladasMistura * fracBritaNaMistura;
+      const tPo = toneladasMistura * fracPoNaMistura;
+      const tEmulsao = toneladasMistura * fracEmulsaoNaMistura;
+
+      // Custos por insumo
       const valorBrita = tBrita * precoTonBrita;
       const valorPo = tPo * precoTonPo;
       const valorEmulsao = tEmulsao * precoTonEmulsao;
 
-      const kgBrita = tBrita * 1000;
-      const kgPo = tPo * 1000;
-      const kgEmulsao = tEmulsao * 1000;
+      // Áreas por espessura
+      const area3 = m3Asfalto / 0.03;
+      const area4 = m3Asfalto / 0.04;
+      const area5 = m3Asfalto / 0.05;
 
-      const area3 = areaPorEspessura(m3Asfalto, 0.03);
-      const area4 = areaPorEspessura(m3Asfalto, 0.04);
-      const area5 = areaPorEspessura(m3Asfalto, 0.05);
+      // Comprimentos para 7 m de largura
+      const comp3 = area3 / 7;
+      const comp4 = area4 / 7;
+      const comp5 = area5 / 7;
 
-      const comp3 = comprimento(area3, 7);
-      const comp4 = comprimento(area4, 7);
-      const comp5 = comprimento(area5, 7);
-
-      const custoPorM3 = custoTon / m3PorTonelada;
+      // Custos unitários derivados
+      const custoPorM3 = custoTonMistura / m3PorTonelada;
       const custoM2_3 = custoPorM3 * 0.03;
       const custoM2_4 = custoPorM3 * 0.04;
       const custoM2_5 = custoPorM3 * 0.05;
 
+      // Painel de traço efetivo (normalizado por 1 t de mistura)
+      const kgPorTon = 1000; // referência
+      const kgBritaPorTonMist = fracBritaNaMistura * kgPorTon;
+      const kgPoPorTonMist = fracPoNaMistura * kgPorTon;
+      const kgEmulsaoPorTonMist = fracEmulsaoNaMistura * kgPorTon;
+
       document.getElementById('resultado').innerHTML = `
-        <h3>Resultados</h3>
-        <p><strong>Produção estimada:</strong> ${formatarBR(m3Asfalto)} m³ (${formatarBR(toneladas)} t)</p>
+        <h3 style="margin-top:0;">Resultados</h3>
+        <ul>
+          <li><strong>Produção estimada:</strong> ${formatarBR(m3Asfalto)} m³ (${formatarBR(toneladasMistura)} t de mistura)</li>
+        </ul>
+
+        <h3>Traço efetivo (por 1 t de mistura)</h3>
+        <ul>
+          <li>Brita 19: ${formatarBR(kgBritaPorTonMist)} kg</li>
+          <li>Pó de pedra: ${formatarBR(kgPoPorTonMist)} kg</li>
+          <li>Emulsão: ${formatarBR(kgEmulsaoPorTonMist)} kg</li>
+        </ul>
+
+        <h4 style="margin:8px 0 0;">Base do lote</h4>
+        <ul>
+          <li>Agregado considerado: 1.000 kg (Brita + Pó = 100%)</li>
+          <li>Emulsão aplicada: ${formatarBR(massaEmulsao)} kg (${formatarBR((massaEmulsao/10))}% sobre agregado)</li>
+          <li>Massa da mistura no lote-base: ${formatarBR(massaMistura)} kg</li>
+        </ul>
+
         <h3>Área pavimentada</h3>
         <ul>
-          <li>Espessura 3 cm: ${formatarBR(area3)} m²</li>
-          <li>Espessura 4 cm: ${formatarBR(area4)} m²</li>
-          <li>Espessura 5 cm: ${formatarBR(area5)} m²</li>
+          <li>3 cm: ${formatarBR(area3)} m²</li>
+          <li>4 cm: ${formatarBR(area4)} m²</li>
+          <li>5 cm: ${formatarBR(area5)} m²</li>
         </ul>
+
         <h3>Comprimento (largura 7 m)</h3>
         <ul>
           <li>3 cm: ${formatarBR(comp3)} m</li>
           <li>4 cm: ${formatarBR(comp4)} m</li>
           <li>5 cm: ${formatarBR(comp5)} m</li>
         </ul>
+
         <h3>Custos</h3>
         <ul>
-          <li>Custo por tonelada de mistura: R$ ${formatarBR(custoTon)}</li>
+          <li>Custo por tonelada de mistura: R$ ${formatarBR(custoTonMistura)}</li>
           <li>Valor por m³: R$ ${formatarBR(custoPorM3)}</li>
           <li>Valor por m² (3 cm): R$ ${formatarBR(custoM2_3)}</li>
           <li>Valor por m² (4 cm): R$ ${formatarBR(custoM2_4)}</li>
           <li>Valor por m² (5 cm): R$ ${formatarBR(custoM2_5)}</li>
         </ul>
-        <h3>Insumos (quantidades e valores)</h3>
+
+        <h3>Insumos (quantidades e valores totais)</h3>
         <ul>
-          <li>Brita 19: ${formatarBR(tBrita)} t (${formatarBR(kgBrita)} kg) — R$ ${formatarBR(valorBrita)}</li>
-          <li>Pó de pedra: ${formatarBR(tPo)} t (${formatarBR(kgPo)} kg) — R$ ${formatarBR(valorPo)}</li>
-          <li>Emulsão asfáltica: ${formatarBR(tEmulsao)} t (${formatarBR(kgEmulsao)} kg) — R$ ${formatarBR(valorEmulsao)}</li>
+          <li>Brita 19: ${formatarBR(tBrita)} t — R$ ${formatarBR(valorBrita)}</li>
+          <li>Pó de pedra: ${formatarBR(tPo)} t — R$ ${formatarBR(valorPo)}</li>
+          <li>Emulsão: ${formatarBR(tEmulsao)} t — R$ ${formatarBR(valorEmulsao)}</li>
         </ul>
       `;
     }
