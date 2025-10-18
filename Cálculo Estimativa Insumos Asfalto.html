@@ -13,37 +13,35 @@
     }
     .container { max-width: 880px; margin: 0 auto; padding: 20px; }
 
-    /* ---- Título e instrução ---- */
-    h2 { font-size: 1.6rem; text-align: center; margin-bottom: 8px; }
-    p { font-size: 1.1rem; text-align: center; margin-bottom: 12px; }
+    h2 { font-size: 1.5rem; text-align: center; margin-bottom: 8px; }
+    p { font-size: 1rem; text-align: center; margin-bottom: 12px; }
 
-    /* ---- Campo e botão super grandes ---- */
+    /* ---- Campos menores ---- */
     input { 
-      padding: 55px; 
-      margin: 25px 0; 
+      padding: 15px; 
+      margin: 10px 0; 
       width: 100%; 
-      font-size: 4rem; 
-      border-radius: 16px;
+      font-size: 1.2rem; 
+      border-radius: 8px;
       border: 2px solid #ccc;
       box-sizing: border-box;
       text-align: center;
       background:#fff;
     }
     button { 
-      padding: 55px; 
+      padding: 15px; 
       width: 100%; 
-      font-size: 2.4rem; 
-      border-radius: 16px;
+      font-size: 1.2rem; 
+      border-radius: 8px;
       background-color: #007bff; 
       color: #fff; 
       border: none; 
       cursor: pointer; 
       font-weight: bold;
-      margin-top: 15px;
+      margin-top: 10px;
     }
     button:hover { background-color: #0056b3; }
 
-    /* ---- Resultados ---- */
     .result { 
       background: #fff; 
       padding: 16px; 
@@ -53,18 +51,7 @@
       line-height: 1.45;
       box-shadow: 0 0 10px rgba(0,0,0,0.08);
     }
-    .grid { display: grid; grid-template-columns: 1fr; gap: 8px; }
-    .muted { color:#555; font-size: .95rem; }
-
-    /* ---- Modo Celular ---- */
-    @media (max-width: 768px) {
-      .container { padding: 10px; }
-      h2 { font-size: 1.4rem; }
-      p { font-size: 1rem; }
-      input { font-size: 2.2rem; padding: 28px; }
-      button { font-size: 1.8rem; padding: 28px; }
-      .result { font-size: .95rem; }
-    }
+    .muted { color:#555; font-size: .9rem; }
   </style>
 </head>
 <body>
@@ -76,11 +63,10 @@
     <button id="btnCalcular">Calcular</button>
 
     <div id="resultado" class="result"></div>
-    <p class="muted">Parâmetros do traço (por tonelada de mistura): 46% brita 19, 46% pó de pedra, 8% emulsão.</p>
+    <p class="muted">Parâmetros do traço: 46% brita 19, 46% pó de pedra, 8% emulsão.</p>
   </div>
 
   <script>
-    // ------- Utilidades de formatação BR -------
     function formatarBR(valor) {
       return (isFinite(valor) ? Number(valor) : 0).toLocaleString('pt-BR', {
         minimumFractionDigits: 2,
@@ -94,29 +80,23 @@
       return isNaN(num) ? 0 : num;
     }
 
-    // ------- Preços por tonelada dos insumos -------
-    const precoTonBrita = 120.00;     // R$/t
-    const precoTonPo = 75.00;         // R$/t (pó de pedra)
-    const precoTonEmulsao = 3900.00;  // R$/t
+    const precoTonBrita = 120.00;
+    const precoTonPo = 75.00;
+    const precoTonEmulsao = 3900.00;
 
-    // ------- Frações mássicas do traço (somam 1.00) -------
     const fracBrita = 0.46;
     const fracPo = 0.46;
     const fracEmulsao = 0.08;
 
-    // Custo por tonelada de asfalto (derivado automaticamente dos preços e frações)
     function custoPorToneladaMistura() {
       return fracBrita * precoTonBrita + fracPo * precoTonPo + fracEmulsao * precoTonEmulsao;
     }
 
-    // Conversões geométricas
-    const m3PorTonelada = 0.40; // volume específico médio da mistura
+    const m3PorTonelada = 0.40;
 
-    // Área resultante por espessura (metros)
     function areaPorEspessura(m3, espessura_m) { return m3 / espessura_m; }
     function comprimento(area, largura) { return area / largura; }
 
-    // Formatar input conforme digita
     const campoValor = document.getElementById('valorDisponivel');
     campoValor.addEventListener('input', function () {
       const somenteDigitos = this.value.replace(/\D/g, '');
@@ -124,7 +104,6 @@
       this.value = Number(val).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     });
 
-    // Ação do botão
     document.getElementById('btnCalcular').addEventListener('click', calcular);
 
     function calcular() {
@@ -135,66 +114,50 @@
         return;
       }
 
-      // Custo por tonelada (agora calculado pelos preços de cada insumo)
       const custoTon = custoPorToneladaMistura();
-
-      // Produção possível
       const toneladas = valorDisponivel / custoTon;
       const m3Asfalto = toneladas * m3PorTonelada;
 
-      // Toneladas de cada insumo
       const tBrita = toneladas * fracBrita;
       const tPo = toneladas * fracPo;
       const tEmulsao = toneladas * fracEmulsao;
 
-      // Custos por insumo
       const valorBrita = tBrita * precoTonBrita;
       const valorPo = tPo * precoTonPo;
       const valorEmulsao = tEmulsao * precoTonEmulsao;
 
-      // (Opcional) quilogramas
       const kgBrita = tBrita * 1000;
       const kgPo = tPo * 1000;
       const kgEmulsao = tEmulsao * 1000;
 
-      // Áreas por espessura
       const area3 = areaPorEspessura(m3Asfalto, 0.03);
       const area4 = areaPorEspessura(m3Asfalto, 0.04);
       const area5 = areaPorEspessura(m3Asfalto, 0.05);
 
-      // Comprimentos para 7 m de largura
       const comp3 = comprimento(area3, 7);
       const comp4 = comprimento(area4, 7);
       const comp5 = comprimento(area5, 7);
 
-      // Custos unitários derivados
       const custoPorM3 = custoTon / m3PorTonelada;
       const custoM2_3 = custoPorM3 * 0.03;
       const custoM2_4 = custoPorM3 * 0.04;
       const custoM2_5 = custoPorM3 * 0.05;
 
-      // Exibir resultados
-      const el = document.getElementById('resultado');
-      el.innerHTML = `
+      document.getElementById('resultado').innerHTML = `
         <h3>Resultados</h3>
-        <div class="grid">
-          <div><strong>Produção estimada:</strong> ${formatarBR(m3Asfalto)} m³ (${formatarBR(toneladas)} t)</div>
-        </div>
-
+        <p><strong>Produção estimada:</strong> ${formatarBR(m3Asfalto)} m³ (${formatarBR(toneladas)} t)</p>
         <h3>Área pavimentada</h3>
         <ul>
           <li>Espessura 3 cm: ${formatarBR(area3)} m²</li>
           <li>Espessura 4 cm: ${formatarBR(area4)} m²</li>
           <li>Espessura 5 cm: ${formatarBR(area5)} m²</li>
         </ul>
-
         <h3>Comprimento (largura 7 m)</h3>
         <ul>
           <li>3 cm: ${formatarBR(comp3)} m</li>
           <li>4 cm: ${formatarBR(comp4)} m</li>
           <li>5 cm: ${formatarBR(comp5)} m</li>
         </ul>
-
         <h3>Custos</h3>
         <ul>
           <li>Custo por tonelada de mistura: R$ ${formatarBR(custoTon)}</li>
@@ -203,15 +166,12 @@
           <li>Valor por m² (4 cm): R$ ${formatarBR(custoM2_4)}</li>
           <li>Valor por m² (5 cm): R$ ${formatarBR(custoM2_5)}</li>
         </ul>
-
         <h3>Insumos (quantidades e valores)</h3>
         <ul>
           <li>Brita 19: ${formatarBR(tBrita)} t (${formatarBR(kgBrita)} kg) — R$ ${formatarBR(valorBrita)}</li>
           <li>Pó de pedra: ${formatarBR(tPo)} t (${formatarBR(kgPo)} kg) — R$ ${formatarBR(valorPo)}</li>
           <li>Emulsão asfáltica: ${formatarBR(tEmulsao)} t (${formatarBR(kgEmulsao)} kg) — R$ ${formatarBR(valorEmulsao)}</li>
         </ul>
-
-        <div class="muted">Observação: os custos unitários são calculados automaticamente a partir dos preços por tonelada informados no código.</div>
       `;
     }
   </script>
