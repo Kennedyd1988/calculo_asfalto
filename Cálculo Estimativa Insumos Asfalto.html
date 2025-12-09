@@ -115,12 +115,12 @@
           <input type="text" id="precoBrita" value="120,00" />
         </div>
         <div class="col-3">
-          <label for="precoPo">Preço Pó (R$/t)</label>
+          <label for="precoPo">Preço Pó de Pedra (R$/t)</label>
           <input type="text" id="precoPo" value="75,00" />
         </div>
         <div class="col-3">
-          <label for="precoAreia">Preço Areia (R$/t)</label>
-          <input type="text" id="precoAreia" value="44,50" />
+          <label for="precoAreia">Preço Areia (R$/m³)</label>
+          <input type="text" id="precoAreia" value="66,75" />
         </div>
         <div class="col-3">
           <label for="precoEmulsao">Preço Emulsão RL-1C (R$/t)</label>
@@ -140,7 +140,7 @@
       </div>
 
       <p class="muted">
-        A areia é convertida de R$/t para R$/m³ usando o preço por tonelada e a densidade informada.
+        A areia é informada em R$/m³ e convertida internamente conforme a densidade.  
         A mão de obra é calculada como um percentual sobre o custo total dos materiais.
       </p>
     </div>
@@ -199,7 +199,8 @@
     function calcularLote(params) {
       const {
         percBrita, percPo, percAreia, percEmulsao,
-        precoTonBrita, precoTonPo, precoTonAreia, precoTonEmulsao
+        precoTonBrita, precoTonPo, precoM3Areia, precoTonEmulsao,
+        densAreia
       } = params;
 
       const A = 1000; // agregado base em kg
@@ -217,11 +218,14 @@
 
       const massaMistura = A + massaEmulsao;
 
-      const custoLoteMateriais =
-          (massaBrita  / 1000) * precoTonBrita  +
-          (massaPo     / 1000) * precoTonPo     +
-          (massaAreia  / 1000) * precoTonAreia  +
-          (massaEmulsao/ 1000) * precoTonEmulsao;
+      // Custos do lote (materiais)
+      const custoBrita  = (massaBrita  / 1000) * precoTonBrita;
+      const custoPo     = (massaPo     / 1000) * precoTonPo;
+      const volumeAreiaLoteM3 = (massaAreia / 1000) / densAreia; // t / (t/m³) = m³
+      const custoAreia  = volumeAreiaLoteM3 * precoM3Areia;
+      const custoEmulsao = (massaEmulsao / 1000) * precoTonEmulsao;
+
+      const custoLoteMateriais = custoBrita + custoPo + custoAreia + custoEmulsao;
 
       const volumeMistura = (massaMistura / 1000) / densMisturaRef;
       const custoTonMisturaMateriais = custoLoteMateriais * (1000 / massaMistura);
@@ -253,10 +257,10 @@
       const percAreia   = Number(document.getElementById("percAreia").value)   || 0;
       const percEmulsao = Number(document.getElementById("percEmulsao").value) || 0;
 
-      // Preços (R$/t)
+      // Preços
       const precoTonBrita   = desformatarBR(document.getElementById("precoBrita").value);
       const precoTonPo      = desformatarBR(document.getElementById("precoPo").value);
-      const precoTonAreia   = desformatarBR(document.getElementById("precoAreia").value);
+      const precoM3Areia    = desformatarBR(document.getElementById("precoAreia").value); // R$/m³
       const precoTonEmulsao = desformatarBR(document.getElementById("precoEmulsao").value);
 
       // Densidade da areia (t/m³)
@@ -267,7 +271,8 @@
 
       const r = calcularLote({
         percBrita, percPo, percAreia, percEmulsao,
-        precoTonBrita, precoTonPo, precoTonAreia, precoTonEmulsao
+        precoTonBrita, precoTonPo, precoM3Areia, precoTonEmulsao,
+        densAreia
       });
 
       // Custo por tonelada
@@ -293,7 +298,8 @@
       // Custos por insumo (materiais)
       const valorBrita   = tBrita   * precoTonBrita;
       const valorPo      = tPo      * precoTonPo;
-      const valorAreia   = tAreia   * precoTonAreia;
+      const volumeAreiaTotalM3 = tAreia / densAreia; // t / (t/m³) = m³
+      const valorAreia   = volumeAreiaTotalM3 * precoM3Areia;
       const valorEmulsao = tEmulsao * precoTonEmulsao;
 
       const totalMateriais = valorBrita + valorPo + valorAreia + valorEmulsao;
@@ -315,10 +321,6 @@
       const custoM2_4 = custoM3Total * 0.04;
       const custoM2_5 = custoM3Total * 0.05;
 
-      // Conversão areia: R$/m³
-      const precoM3Areia = precoTonAreia * densAreia;
-
-      // Monta resultado
       document.getElementById('resultado').innerHTML = `
         <h3 style="margin-top:0;">Resultados</h3>
 
@@ -337,11 +339,11 @@
               (${formatarBR(r.massaEmulsao / 10)}% sobre o agregado base)</li>
         </ul>
 
-        <h3>Áreas pavimentadas</h3>
+        <h3>Áreas pavimentadas a 7 metros de largura</h3>
         <ul>
-          <li>3 cm: ${formatarBR(area3)} m² (${formatarBR(comp3)} m de extensão a 7 m de largura)</li>
-          <li>4 cm: ${formatarBR(area4)} m² (${formatarBR(comp4)} m)</li>
-          <li>5 cm: ${formatarBR(area5)} m² (${formatarBR(comp5)} m)</li>
+          <li>3 cm: ${formatarBR(area3)} m² (${formatarBR(comp3)} m de extensão)</li>
+          <li>4 cm: ${formatarBR(area4)} m² (${formatarBR(comp4)} m de extensão)</li>
+          <li>5 cm: ${formatarBR(area5)} m² (${formatarBR(comp5)} m de extensão)</li>
         </ul>
 
         <h3>Custos</h3>
@@ -354,27 +356,21 @@
           <li>Custo por m² (5 cm): R$ ${formatarBR(custoM2_5)}</li>
         </ul>
 
-        <h3>Mão de obra (separada)</h3>
+        <h3>Custos da Mão de Obra</h3>
         <ul>
-          <li>Percentual de mão de obra: ${formatarBR(percMaoDeObra * 100)} %</li>
-          <li>Valor da mão de obra (sobre materiais): R$ ${formatarBR(valorMaoDeObra)}</li>
-          <li>Total geral (materiais + mão de obra): R$ ${formatarBR(totalComMO)}</li>
+          <li>Percentual aplicado: ${formatarBR(percMaoDeObra * 100)} %</li>
+          <li>Valor total da mão de obra: R$ ${formatarBR(valorMaoDeObra)}</li>
         </ul>
 
-        <h3>Insumos totais</h3>
+        <h3>Custos Totais</h3>
         <ul>
-          <li>Brita 0: ${formatarBR(tBrita)} t — R$ ${formatarBR(valorBrita)}</li>
-          <li>Pó de pedra: ${formatarBR(tPo)} t — R$ ${formatarBR(valorPo)}</li>
-          <li>Areia: ${formatarBR(tAreia)} t — R$ ${formatarBR(valorAreia)}</li>
-          <li>Emulsão RL-1C: ${formatarBR(tEmulsao)} t — R$ ${formatarBR(valorEmulsao)}</li>
-          <li><strong>Total materiais:</strong> R$ ${formatarBR(totalMateriais)}</li>
-        </ul>
-
-        <h3>Conversão da areia (t ↔ m³)</h3>
-        <ul>
-          <li>Densidade considerada da areia: ${formatarBR(densAreia)} t/m³</li>
-          <li>Preço da areia: R$ ${formatarBR(precoTonAreia)} por tonelada</li>
-          <li><strong>Preço equivalente:</strong> R$ ${formatarBR(precoM3Areia)} por m³</li>
+          <li>Brita 0: R$ ${formatarBR(valorBrita)}</li>
+          <li>Pó de Pedra: R$ ${formatarBR(valorPo)}</li>
+          <li>Areia (m³ convertido): R$ ${formatarBR(valorAreia)}</li>
+          <li>Emulsão RL-1C: R$ ${formatarBR(valorEmulsao)}</li>
+          <li><strong>Total de materiais:</strong> R$ ${formatarBR(totalMateriais)}</li>
+          <li><strong>Custo da mão de obra:</strong> R$ ${formatarBR(valorMaoDeObra)}</li>
+          <li><strong>Total geral do serviço:</strong> R$ ${formatarBR(totalComMO)}</li>
         </ul>
       `;
     }
