@@ -11,7 +11,7 @@
       padding: 0;
       background: #f4f4f4;
     }
-    .container { max-width: 960px; margin: 0 auto; padding: 20px; }
+    .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
 
     h2 { font-size: 1.5rem; text-align: center; margin-bottom: 8px; }
     p { font-size: 1rem; text-align: center; margin-bottom: 12px; }
@@ -58,9 +58,18 @@
     }
     .muted { color:#555; font-size: .86rem; text-align:center; margin-top:8px; }
 
+    /* Tabelas */
+    table { width:100%; border-collapse: collapse; margin:10px 0 16px; font-size:0.95rem; }
+    th, td { border:1px solid #ddd; padding:10px; text-align:center; }
+    th { background:#f2f2f2; font-weight:700; }
+    .right { text-align:right; }
+    .left { text-align:left; }
+    .total-row td { font-weight:700; background:#fafafa; }
+
     @media (max-width: 768px) {
       .grid { gap:10px; }
       .col-6, .col-4, .col-3 { grid-column: span 12; }
+      table { font-size:0.9rem; }
     }
   </style>
 </head>
@@ -275,7 +284,7 @@
         densAreia
       });
 
-      // Custo por tonelada
+      // Custo por tonelada (materiais) e com mão de obra
       const custoTonMateriais = r.custoTonMisturaMateriais;
       const custoTonTotal = custoTonMateriais * (1 + percMaoDeObra);
 
@@ -283,11 +292,17 @@
       const toneladasMistura = valorDisponivel / custoTonTotal;
       const m3Asfalto = toneladasMistura * r.m3PorTon;
 
-      // Frações em kg/kg de mistura
+      // Frações em t por t de mistura (proporção)
       const fracBrita   = r.massaBrita   / r.massaMistura;
       const fracPo      = r.massaPo      / r.massaMistura;
       const fracAreia   = r.massaAreia   / r.massaMistura;
       const fracEmulsao = r.massaEmulsao / r.massaMistura;
+
+      // Traço em toneladas por 1 tonelada de mistura
+      const tBritaPorTonMist   = fracBrita; 
+      const tPoPorTonMist      = fracPo;
+      const tAreiaPorTonMist   = fracAreia;
+      const tEmulsaoPorTonMist = fracEmulsao;
 
       // Toneladas totais de cada insumo
       const tBrita   = toneladasMistura * fracBrita;
@@ -295,10 +310,12 @@
       const tAreia   = toneladasMistura * fracAreia;
       const tEmulsao = toneladasMistura * fracEmulsao;
 
+      // Conversão areia: t -> m³ (para custo, já que o preço é em R$/m³)
+      const volumeAreiaTotalM3 = tAreia / densAreia;
+
       // Custos por insumo (materiais)
       const valorBrita   = tBrita   * precoTonBrita;
       const valorPo      = tPo      * precoTonPo;
-      const volumeAreiaTotalM3 = tAreia / densAreia; // t / (t/m³) = m³
       const valorAreia   = volumeAreiaTotalM3 * precoM3Areia;
       const valorEmulsao = tEmulsao * precoTonEmulsao;
 
@@ -306,7 +323,7 @@
       const valorMaoDeObra = totalMateriais * percMaoDeObra;
       const totalComMO = totalMateriais + valorMaoDeObra;
 
-      // Áreas e comprimentos
+      // Áreas e comprimentos (largura 7m)
       const area3 = m3Asfalto / 0.03;
       const area4 = m3Asfalto / 0.04;
       const area5 = m3Asfalto / 0.05;
@@ -321,57 +338,169 @@
       const custoM2_4 = custoM3Total * 0.04;
       const custoM2_5 = custoM3Total * 0.05;
 
+      // Valor por tonelada de cada item (para exibir em Custos Totais)
+      // Areia: converter R$/m³ para R$/t via densidade (t/m³)
+      const valorTonAreia = densAreia > 0 ? (precoM3Areia / densAreia) : 0;
+
       document.getElementById('resultado').innerHTML = `
         <h3 style="margin-top:0;">Resultados</h3>
 
-        <p><strong>Produção estimada:</strong> ${formatarBR(m3Asfalto)} m³ 
-        (${formatarBR(toneladasMistura)} t de mistura pronta)</p>
+        <table>
+          <tr>
+            <th class="left">Indicador</th>
+            <th>Valor</th>
+          </tr>
+          <tr>
+            <td class="left"><strong>Produção estimada</strong></td>
+            <td>${formatarBR(m3Asfalto)} m³ (${formatarBR(toneladasMistura)} t de mistura)</td>
+          </tr>
+          <tr>
+            <td class="left"><strong>Densidade adotada da mistura</strong></td>
+            <td>${formatarBR(r.densMistura)} t/m³ (m³/t = ${formatarBR(r.m3PorTon)})</td>
+          </tr>
+        </table>
 
-        <p><strong>Densidade adotada da mistura:</strong> ${formatarBR(r.densMistura)} t/m³ 
-        (m³/t = ${formatarBR(r.m3PorTon)})</p>
-
-        <h3>Traço por tonelada de mistura</h3>
-        <ul>
-          <li>Brita 0: ${formatarBR(fracBrita * 1000)} kg</li>
-          <li>Pó de pedra: ${formatarBR(fracPo * 1000)} kg</li>
-          <li>Areia: ${formatarBR(fracAreia * 1000)} kg</li>
-          <li>Emulsão RL-1C: ${formatarBR(fracEmulsao * 1000)} kg 
-              (${formatarBR(r.massaEmulsao / 10)}% sobre o agregado base)</li>
-        </ul>
+        <h3>Traço por tonelada de mistura (em toneladas)</h3>
+        <table>
+          <tr>
+            <th class="left">Componente</th>
+            <th>t por 1 t de mistura</th>
+          </tr>
+          <tr>
+            <td class="left">Brita 0</td>
+            <td>${formatarBR(tBritaPorTonMist)}</td>
+          </tr>
+          <tr>
+            <td class="left">Pó de Pedra</td>
+            <td>${formatarBR(tPoPorTonMist)}</td>
+          </tr>
+          <tr>
+            <td class="left">Areia</td>
+            <td>${formatarBR(tAreiaPorTonMist)}</td>
+          </tr>
+          <tr>
+            <td class="left">Emulsão RL-1C</td>
+            <td>${formatarBR(tEmulsaoPorTonMist)}</td>
+          </tr>
+        </table>
 
         <h3>Áreas pavimentadas a 7 metros de largura</h3>
-        <ul>
-          <li>3 cm: ${formatarBR(area3)} m² (${formatarBR(comp3)} m de extensão)</li>
-          <li>4 cm: ${formatarBR(area4)} m² (${formatarBR(comp4)} m de extensão)</li>
-          <li>5 cm: ${formatarBR(area5)} m² (${formatarBR(comp5)} m de extensão)</li>
-        </ul>
+        <table>
+          <tr>
+            <th>Espessura</th>
+            <th>Área (m²)</th>
+            <th>Extensão (m)</th>
+          </tr>
+          <tr>
+            <td>3 cm</td>
+            <td>${formatarBR(area3)}</td>
+            <td>${formatarBR(comp3)}</td>
+          </tr>
+          <tr>
+            <td>4 cm</td>
+            <td>${formatarBR(area4)}</td>
+            <td>${formatarBR(comp4)}</td>
+          </tr>
+          <tr>
+            <td>5 cm</td>
+            <td>${formatarBR(area5)}</td>
+            <td>${formatarBR(comp5)}</td>
+          </tr>
+        </table>
 
         <h3>Custos</h3>
-        <ul>
-          <li>Custo por tonelada (apenas materiais): R$ ${formatarBR(custoTonMateriais)}</li>
-          <li>Custo por tonelada (materiais + mão de obra): R$ ${formatarBR(custoTonTotal)}</li>
-          <li>Custo por m³ (total): R$ ${formatarBR(custoM3Total)}</li>
-          <li>Custo por m² (3 cm): R$ ${formatarBR(custoM2_3)}</li>
-          <li>Custo por m² (4 cm): R$ ${formatarBR(custoM2_4)}</li>
-          <li>Custo por m² (5 cm): R$ ${formatarBR(custoM2_5)}</li>
-        </ul>
+        <table>
+          <tr>
+            <th class="left">Item</th>
+            <th>Valor</th>
+          </tr>
+          <tr>
+            <td class="left">Custo por tonelada (apenas materiais)</td>
+            <td>R$ ${formatarBR(custoTonMateriais)}</td>
+          </tr>
+          <tr>
+            <td class="left">Custo por tonelada (materiais + mão de obra)</td>
+            <td>R$ ${formatarBR(custoTonTotal)}</td>
+          </tr>
+          <tr>
+            <td class="left">Custo por m³ (total)</td>
+            <td>R$ ${formatarBR(custoM3Total)}</td>
+          </tr>
+          <tr>
+            <td class="left">Custo por m² (3 cm)</td>
+            <td>R$ ${formatarBR(custoM2_3)}</td>
+          </tr>
+          <tr>
+            <td class="left">Custo por m² (4 cm)</td>
+            <td>R$ ${formatarBR(custoM2_4)}</td>
+          </tr>
+          <tr>
+            <td class="left">Custo por m² (5 cm)</td>
+            <td>R$ ${formatarBR(custoM2_5)}</td>
+          </tr>
+        </table>
 
         <h3>Custos da Mão de Obra</h3>
-        <ul>
-          <li>Percentual aplicado: ${formatarBR(percMaoDeObra * 100)} %</li>
-          <li>Valor total da mão de obra: R$ ${formatarBR(valorMaoDeObra)}</li>
-        </ul>
+        <table>
+          <tr>
+            <th class="left">Item</th>
+            <th>Valor</th>
+          </tr>
+          <tr>
+            <td class="left">Percentual aplicado</td>
+            <td>${formatarBR(percMaoDeObra * 100)} %</td>
+          </tr>
+          <tr>
+            <td class="left">Valor total da mão de obra</td>
+            <td>R$ ${formatarBR(valorMaoDeObra)}</td>
+          </tr>
+        </table>
 
         <h3>Custos Totais</h3>
-        <ul>
-          <li>Brita 0: R$ ${formatarBR(valorBrita)}</li>
-          <li>Pó de Pedra: R$ ${formatarBR(valorPo)}</li>
-          <li>Areia (m³ convertido): R$ ${formatarBR(valorAreia)}</li>
-          <li>Emulsão RL-1C: R$ ${formatarBR(valorEmulsao)}</li>
-          <li><strong>Total de materiais:</strong> R$ ${formatarBR(totalMateriais)}</li>
-          <li><strong>Custo da mão de obra:</strong> R$ ${formatarBR(valorMaoDeObra)}</li>
-          <li><strong>Total geral do serviço:</strong> R$ ${formatarBR(totalComMO)}</li>
-        </ul>
+        <table>
+          <tr>
+            <th class="left">Insumo</th>
+            <th>Preço unitário</th>
+            <th>Quantidade</th>
+            <th>Custo total</th>
+          </tr>
+          <tr>
+            <td class="left">Brita 0</td>
+            <td>R$ ${formatarBR(precoTonBrita)} / t</td>
+            <td>${formatarBR(tBrita)} t</td>
+            <td>R$ ${formatarBR(valorBrita)}</td>
+          </tr>
+          <tr>
+            <td class="left">Pó de Pedra</td>
+            <td>R$ ${formatarBR(precoTonPo)} / t</td>
+            <td>${formatarBR(tPo)} t</td>
+            <td>R$ ${formatarBR(valorPo)}</td>
+          </tr>
+          <tr>
+            <td class="left">Areia</td>
+            <td>R$ ${formatarBR(valorTonAreia)} / t (equivalente)</td>
+            <td>${formatarBR(tAreia)} t</td>
+            <td>R$ ${formatarBR(valorAreia)}</td>
+          </tr>
+          <tr>
+            <td class="left">Emulsão RL-1C</td>
+            <td>R$ ${formatarBR(precoTonEmulsao)} / t</td>
+            <td>${formatarBR(tEmulsao)} t</td>
+            <td>R$ ${formatarBR(valorEmulsao)}</td>
+          </tr>
+          <tr class="total-row">
+            <td class="left" colspan="3">Total de materiais</td>
+            <td>R$ ${formatarBR(totalMateriais)}</td>
+          </tr>
+          <tr class="total-row">
+            <td class="left" colspan="3">Custo da mão de obra</td>
+            <td>R$ ${formatarBR(valorMaoDeObra)}</td>
+          </tr>
+          <tr class="total-row">
+            <td class="left" colspan="3">Total geral do serviço</td>
+            <td>R$ ${formatarBR(totalComMO)}</td>
+          </tr>
+        </table>
       `;
     }
   </script>
