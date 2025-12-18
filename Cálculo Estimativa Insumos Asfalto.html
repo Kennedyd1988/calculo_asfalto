@@ -288,6 +288,39 @@
       const custoTonMateriais = r.custoTonMisturaMateriais;
       const custoTonTotal = custoTonMateriais * (1 + percMaoDeObra);
 
+      // ===============================
+      // CENÁRIO: APENAS INSUMOS (sem M.O.)
+      // ===============================
+      const toneladasMisturaInsumos = valorDisponivel / custoTonMateriais;
+      const m3AsfaltoInsumos = toneladasMisturaInsumos * r.m3PorTon;
+      
+      // Toneladas totais de cada insumo (apenas-insumos)
+      const tBrita_Insumos   = toneladasMisturaInsumos * fracBrita;
+      const tPo_Insumos      = toneladasMisturaInsumos * fracPo;
+      const tAreia_Insumos   = toneladasMisturaInsumos * fracAreia;
+      const tEmulsao_Insumos = toneladasMisturaInsumos * fracEmulsao;
+      
+      // Areia em m³ (apenas-insumos)
+      const volumeAreiaTotalM3_Insumos = tAreia_Insumos / densAreia;
+      
+      // Custos por insumo (apenas-insumos)
+      const valorBrita_Insumos   = tBrita_Insumos * precoTonBrita;
+      const valorPo_Insumos      = tPo_Insumos * precoTonPo;
+      const valorAreia_Insumos   = volumeAreiaTotalM3_Insumos * precoM3Areia;
+      const valorEmulsao_Insumos = tEmulsao_Insumos * precoTonEmulsao;
+      
+      // Total (deve fechar com o valor disponível, por construção)
+      const totalInsumosApenas = valorBrita_Insumos + valorPo_Insumos + valorAreia_Insumos + valorEmulsao_Insumos;
+      
+      // Áreas e comprimentos (apenas-insumos)
+      const area3_Insumos = m3AsfaltoInsumos / 0.03;
+      const area4_Insumos = m3AsfaltoInsumos / 0.04;
+      const area5_Insumos = m3AsfaltoInsumos / 0.05;
+      
+      const comp3_Insumos = area3_Insumos / 7;
+      const comp4_Insumos = area4_Insumos / 7;
+      const comp5_Insumos = area5_Insumos / 7;
+      
       // Produção possível
       const toneladasMistura = valorDisponivel / custoTonTotal;
       const m3Asfalto = toneladasMistura * r.m3PorTon;
@@ -501,9 +534,90 @@
             <td>R$ ${formatarBR(totalComMO)}</td>
           </tr>
         </table>
+
+        <h3>Cenário: Orçamento aplicado apenas na compra de insumos (sem mão de obra)</h3>
+
+        <table>
+          <tr>
+            <th class="left">Indicador</th>
+            <th>Valor</th>
+          </tr>
+          <tr>
+            <td class="left"><strong>Produção estimada (somente insumos)</strong></td>
+            <td>${formatarBR(m3AsfaltoInsumos)} m³ (${formatarBR(toneladasMisturaInsumos)} t de mistura)</td>
+          </tr>
+          <tr>
+            <td class="left"><strong>Orçamento aplicado</strong></td>
+            <td>R$ ${formatarBR(valorDisponivel)}</td>
+          </tr>
+        </table>
+        
+        <h4 style="margin:8px 0 0;">Custos Totais (somente insumos)</h4>
+        <table>
+          <tr>
+            <th class="left">Insumo</th>
+            <th>Preço unitário</th>
+            <th>Quantidade</th>
+            <th>Custo total</th>
+          </tr>
+          <tr>
+            <td class="left">Brita 0</td>
+            <td>R$ ${formatarBR(precoTonBrita)} / t</td>
+            <td>${formatarBR(tBrita_Insumos)} t</td>
+            <td>R$ ${formatarBR(valorBrita_Insumos)}</td>
+          </tr>
+          <tr>
+            <td class="left">Pó de Pedra</td>
+            <td>R$ ${formatarBR(precoTonPo)} / t</td>
+            <td>${formatarBR(tPo_Insumos)} t</td>
+            <td>R$ ${formatarBR(valorPo_Insumos)}</td>
+          </tr>
+          <tr>
+            <td class="left">Areia</td>
+            <td>R$ ${formatarBR(valorTonAreia)} / t (equivalente)</td>
+            <td>${formatarBR(tAreia_Insumos)} t</td>
+            <td>R$ ${formatarBR(valorAreia_Insumos)}</td>
+          </tr>
+          <tr>
+            <td class="left">Emulsão RL-1C</td>
+            <td>R$ ${formatarBR(precoTonEmulsao)} / t</td>
+            <td>${formatarBR(tEmulsao_Insumos)} t</td>
+            <td>R$ ${formatarBR(valorEmulsao_Insumos)}</td>
+          </tr>
+          <tr class="total-row">
+            <td class="left" colspan="3">Total aplicado em insumos</td>
+            <td>R$ ${formatarBR(totalInsumosApenas)}</td>
+          </tr>
+        </table>
+        
+        <h4 style="margin:8px 0 0;">Áreas pavimentadas a 7 metros de largura (somente insumos)</h4>
+        <table>
+          <tr>
+            <th>Espessura</th>
+            <th>Área (m²)</th>
+            <th>Extensão (m)</th>
+          </tr>
+          <tr>
+            <td>3 cm</td>
+            <td>${formatarBR(area3_Insumos)}</td>
+            <td>${formatarBR(comp3_Insumos)}</td>
+          </tr>
+          <tr>
+            <td>4 cm</td>
+            <td>${formatarBR(area4_Insumos)}</td>
+            <td>${formatarBR(comp4_Insumos)}</td>
+          </tr>
+          <tr>
+            <td>5 cm</td>
+            <td>${formatarBR(area5_Insumos)}</td>
+            <td>${formatarBR(comp5_Insumos)}</td>
+          </tr>
+        </table>
+
       `;
     }
   </script>
 </body>
 </html>
+
 
