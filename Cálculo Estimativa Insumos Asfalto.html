@@ -88,7 +88,7 @@
       <h3 style="margin:0 0 10px 0; font-size:1.05rem;">Traço do agregado (editável)</h3>
       <div class="grid" style="margin-bottom:10px;">
         <div class="col-4">
-          <label for="percBrita">Brita 0 (% sobre o agregado)</label>
+          <label for="percBrita">Brita 5/8 (% sobre o agregado)</label>
           <input type="number" id="percBrita" value="40.0" step="0.1" />
         </div>
         <div class="col-4">
@@ -109,7 +109,7 @@
       </div>
 
       <p class="muted">
-        Agregado base = 1.000 kg. Os percentuais de Brita 0, Pó e Areia podem ser ajustados;
+        Agregado base = 1.000 kg. Os percentuais de Brita 5/8, Pó e Areia podem ser ajustados;
         o cálculo normaliza automaticamente para somar 100%.
       </p>
     </div>
@@ -119,7 +119,7 @@
       <h3 style="margin:0 0 10px 0; font-size:1.05rem;">Parâmetros econômicos (editáveis)</h3>
       <div class="grid" style="margin-bottom:8px;">
         <div class="col-3">
-          <label for="precoBrita">Preço Brita 0 (R$/t)</label>
+          <label for="precoBrita">Preço Brita 5/8 (R$/t)</label>
           <input type="text" id="precoBrita" value="114,70" />
         </div>
         <div class="col-3">
@@ -374,7 +374,7 @@
         <h3>Traço por tonelada de mistura (em toneladas)</h3>
         <table>
           <tr><th class="left">Componente</th><th>t por 1 t de mistura</th></tr>
-          <tr><td class="left">Brita 0</td><td>${formatarBR(tBritaPorTonMist)}</td></tr>
+          <tr><td class="left">Brita 5/8</td><td>${formatarBR(tBritaPorTonMist)}</td></tr>
           <tr><td class="left">Pó de Pedra</td><td>${formatarBR(tPoPorTonMist)}</td></tr>
           <tr><td class="left">Areia</td><td>${formatarBR(tAreiaPorTonMist)}</td></tr>
           <tr><td class="left">Emulsão RL-1C</td><td>${formatarBR(tEmulsaoPorTonMist)}</td></tr>
@@ -415,7 +415,7 @@
             <th>Custo total</th>
           </tr>
           <tr>
-            <td class="left">Brita 0</td>
+            <td class="left">Brita 5/8</td>
             <td>R$ ${formatarBR(precoTonBrita)} / t</td>
             <td>${formatarBR(tBrita)} t</td>
             <td>R$ ${formatarBR(valorBrita)}</td>
@@ -474,7 +474,7 @@
             <th>Custo total</th>
           </tr>
           <tr>
-            <td class="left">Brita 0</td>
+            <td class="left">Brita 5/8</td>
             <td>R$ ${formatarBR(precoTonBrita)} / t</td>
             <td>${formatarBR(tBrita_Insumos)} t</td>
             <td>R$ ${formatarBR(valorBrita_Insumos)}</td>
@@ -515,3 +515,4 @@
   </script>
 </body>
 </html>
+
