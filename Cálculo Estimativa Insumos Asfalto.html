@@ -5,9 +5,9 @@
   <title>Calculadora de Produção de Asfalto</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body { 
-      font-family: Arial, sans-serif; 
-      margin: 0; 
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
       padding: 0;
       background: #f4f4f4;
     }
@@ -18,40 +18,40 @@
 
     .card { background:#fff; border-radius:12px; padding:16px; box-shadow:0 0 10px rgba(0,0,0,.07); margin-bottom:12px; }
     .grid { display:grid; grid-template-columns: repeat(12, 1fr); gap:12px; }
-    .col-12{grid-column: span 12;} 
-    .col-6{grid-column: span 6;} 
+    .col-12{grid-column: span 12;}
+    .col-6{grid-column: span 6;}
     .col-4{grid-column: span 4;}
     .col-3{grid-column: span 3;}
 
     label { display:block; font-size:.9rem; margin-bottom:6px; color:#333; }
-    input[type="text"], input[type="number"] { 
-      padding: 8px 10px; 
-      width: 100%; 
-      font-size: 0.95rem; 
+    input[type="text"], input[type="number"] {
+      padding: 8px 10px;
+      width: 100%;
+      font-size: 0.95rem;
       border-radius: 8px;
       border: 2px solid #ccc;
       box-sizing: border-box;
       text-align: center;
       background:#fff;
     }
-    button { 
-      padding: 14px; 
-      width: 100%; 
-      font-size: 1.05rem; 
+    button {
+      padding: 14px;
+      width: 100%;
+      font-size: 1.05rem;
       border-radius: 8px;
-      background-color: #007bff; 
-      color: #fff; 
-      border: none; 
-      cursor: pointer; 
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      cursor: pointer;
       font-weight: bold;
     }
     button:hover { background-color: #0056b3; }
 
-    .result { 
-      background: #fff; 
-      padding: 16px; 
-      margin-top: 15px; 
-      border-radius: 12px; 
+    .result {
+      background: #fff;
+      padding: 16px;
+      margin-top: 15px;
+      border-radius: 12px;
       font-size: 1rem;
       line-height: 1.45;
       box-shadow: 0 0 10px rgba(0,0,0,0.08);
@@ -62,7 +62,6 @@
     table { width:100%; border-collapse: collapse; margin:10px 0 16px; font-size:0.95rem; }
     th, td { border:1px solid #ddd; padding:10px; text-align:center; }
     th { background:#f2f2f2; font-weight:700; }
-    .right { text-align:right; }
     .left { text-align:left; }
     .total-row td { font-weight:700; background:#fafafa; }
 
@@ -110,7 +109,7 @@
       </div>
 
       <p class="muted">
-        Agregado base = 1.000 kg. Os percentuais de Brita 0, Pó e Areia podem ser ajustados; 
+        Agregado base = 1.000 kg. Os percentuais de Brita 0, Pó e Areia podem ser ajustados;
         o cálculo normaliza automaticamente para somar 100%.
       </p>
     </div>
@@ -149,7 +148,7 @@
       </div>
 
       <p class="muted">
-        A areia é informada em R$/m³ e convertida internamente conforme a densidade.  
+        A areia é informada em R$/m³ e convertida internamente conforme a densidade.
         A mão de obra é calculada como um percentual sobre o custo total dos materiais.
       </p>
     </div>
@@ -163,13 +162,12 @@
     <div id="resultado" class="result"></div>
 
     <p class="muted">
-      Densidade de referência da mistura: 1,89 t/m³ (usada para converter t ↔ m³).  
+      Densidade de referência da mistura: 1,89 t/m³ (usada para converter t ↔ m³).
       Ajuste os valores conforme seus orçamentos reais.
     </p>
   </div>
 
   <script>
-    // ------- Utilidades -------
     function formatarBR(valor) {
       return (isFinite(valor) ? Number(valor) : 0).toLocaleString('pt-BR', {
         minimumFractionDigits: 2,
@@ -184,10 +182,8 @@
       return isNaN(num) ? 0 : num;
     }
 
-    // Densidade de referência da mistura (t/m³)
     const densMisturaRef = 1.89;
 
-    // Formatação de campos monetários
     function configurarCampoMonetario(id) {
       const el = document.getElementById(id);
       el.addEventListener("input", function () {
@@ -212,9 +208,8 @@
         densAreia
       } = params;
 
-      const A = 1000; // agregado base em kg
+      const A = 1000;
 
-      // Normaliza percentuais para somarem 100
       const somaPerc = percBrita + percPo + percAreia;
       const fator = somaPerc > 0 ? (1 / somaPerc) : 0;
 
@@ -222,21 +217,19 @@
       const massaPo     = A * percPo     * fator;
       const massaAreia  = A * percAreia  * fator;
 
-      // Emulsão RL-1C: % sobre o agregado (base 1.000 kg), 1% = 10 kg
       const massaEmulsao = percEmulsao * 10;
-
       const massaMistura = A + massaEmulsao;
 
-      // Custos do lote (materiais)
       const custoBrita  = (massaBrita  / 1000) * precoTonBrita;
       const custoPo     = (massaPo     / 1000) * precoTonPo;
-      const volumeAreiaLoteM3 = (massaAreia / 1000) / densAreia; // t / (t/m³) = m³
+
+      const volumeAreiaLoteM3 = (massaAreia / 1000) / densAreia;
       const custoAreia  = volumeAreiaLoteM3 * precoM3Areia;
+
       const custoEmulsao = (massaEmulsao / 1000) * precoTonEmulsao;
 
       const custoLoteMateriais = custoBrita + custoPo + custoAreia + custoEmulsao;
 
-      const volumeMistura = (massaMistura / 1000) / densMisturaRef;
       const custoTonMisturaMateriais = custoLoteMateriais * (1000 / massaMistura);
 
       return {
@@ -245,7 +238,6 @@
         massaAreia,
         massaEmulsao,
         massaMistura,
-        volumeMistura,
         custoTonMisturaMateriais,
         m3PorTon: 1 / densMisturaRef,
         densMistura: densMisturaRef
@@ -254,7 +246,6 @@
 
     function calcular() {
       const valorDisponivel = desformatarBR(document.getElementById("valorDisponivel").value);
-
       if (!isFinite(valorDisponivel) || valorDisponivel <= 0) {
         alert("Informe um valor disponível válido.");
         return;
@@ -269,10 +260,10 @@
       // Preços
       const precoTonBrita   = desformatarBR(document.getElementById("precoBrita").value);
       const precoTonPo      = desformatarBR(document.getElementById("precoPo").value);
-      const precoM3Areia    = desformatarBR(document.getElementById("precoAreia").value); // R$/m³
+      const precoM3Areia    = desformatarBR(document.getElementById("precoAreia").value);
       const precoTonEmulsao = desformatarBR(document.getElementById("precoEmulsao").value);
 
-      // Densidade da areia (t/m³)
+      // Densidade da areia
       const densAreia = Number(document.getElementById("densAreia").value) || 1.5;
 
       // % mão de obra
@@ -284,69 +275,32 @@
         densAreia
       });
 
-      // Custo por tonelada (materiais) e com mão de obra
-      const custoTonMateriais = r.custoTonMisturaMateriais;
-      const custoTonTotal = custoTonMateriais * (1 + percMaoDeObra);
-
-      // ===============================
-      // CENÁRIO: APENAS INSUMOS (sem M.O.)
-      // ===============================
-      const toneladasMisturaInsumos = valorDisponivel / custoTonMateriais;
-      const m3AsfaltoInsumos = toneladasMisturaInsumos * r.m3PorTon;
-      
-      // Toneladas totais de cada insumo (apenas-insumos)
-      const tBrita_Insumos   = toneladasMisturaInsumos * fracBrita;
-      const tPo_Insumos      = toneladasMisturaInsumos * fracPo;
-      const tAreia_Insumos   = toneladasMisturaInsumos * fracAreia;
-      const tEmulsao_Insumos = toneladasMisturaInsumos * fracEmulsao;
-      
-      // Areia em m³ (apenas-insumos)
-      const volumeAreiaTotalM3_Insumos = tAreia_Insumos / densAreia;
-      
-      // Custos por insumo (apenas-insumos)
-      const valorBrita_Insumos   = tBrita_Insumos * precoTonBrita;
-      const valorPo_Insumos      = tPo_Insumos * precoTonPo;
-      const valorAreia_Insumos   = volumeAreiaTotalM3_Insumos * precoM3Areia;
-      const valorEmulsao_Insumos = tEmulsao_Insumos * precoTonEmulsao;
-      
-      // Total (deve fechar com o valor disponível, por construção)
-      const totalInsumosApenas = valorBrita_Insumos + valorPo_Insumos + valorAreia_Insumos + valorEmulsao_Insumos;
-      
-      // Áreas e comprimentos (apenas-insumos)
-      const area3_Insumos = m3AsfaltoInsumos / 0.03;
-      const area4_Insumos = m3AsfaltoInsumos / 0.04;
-      const area5_Insumos = m3AsfaltoInsumos / 0.05;
-      
-      const comp3_Insumos = area3_Insumos / 7;
-      const comp4_Insumos = area4_Insumos / 7;
-      const comp5_Insumos = area5_Insumos / 7;
-      
-      // Produção possível
-      const toneladasMistura = valorDisponivel / custoTonTotal;
-      const m3Asfalto = toneladasMistura * r.m3PorTon;
-
-      // Frações em t por t de mistura (proporção)
+      // Frações (tem que vir ANTES dos cenários)
       const fracBrita   = r.massaBrita   / r.massaMistura;
       const fracPo      = r.massaPo      / r.massaMistura;
       const fracAreia   = r.massaAreia   / r.massaMistura;
       const fracEmulsao = r.massaEmulsao / r.massaMistura;
 
-      // Traço em toneladas por 1 tonelada de mistura
-      const tBritaPorTonMist   = fracBrita; 
-      const tPoPorTonMist      = fracPo;
-      const tAreiaPorTonMist   = fracAreia;
-      const tEmulsaoPorTonMist = fracEmulsao;
+      // Custos por tonelada
+      const custoTonMateriais = r.custoTonMisturaMateriais;
+      const custoTonTotal = custoTonMateriais * (1 + percMaoDeObra);
 
-      // Toneladas totais de cada insumo
+      // Areia: preço equivalente em R$/t (apenas para exibição)
+      const valorTonAreia = densAreia > 0 ? (precoM3Areia / densAreia) : 0;
+
+      // =========================
+      // CENÁRIO 1: COM MÃO DE OBRA
+      // =========================
+      const toneladasMistura = valorDisponivel / custoTonTotal;
+      const m3Asfalto = toneladasMistura * r.m3PorTon;
+
       const tBrita   = toneladasMistura * fracBrita;
       const tPo      = toneladasMistura * fracPo;
       const tAreia   = toneladasMistura * fracAreia;
       const tEmulsao = toneladasMistura * fracEmulsao;
 
-      // Conversão areia: t -> m³ (para custo, já que o preço é em R$/m³)
       const volumeAreiaTotalM3 = tAreia / densAreia;
 
-      // Custos por insumo (materiais)
       const valorBrita   = tBrita   * precoTonBrita;
       const valorPo      = tPo      * precoTonPo;
       const valorAreia   = volumeAreiaTotalM3 * precoM3Areia;
@@ -356,7 +310,6 @@
       const valorMaoDeObra = totalMateriais * percMaoDeObra;
       const totalComMO = totalMateriais + valorMaoDeObra;
 
-      // Áreas e comprimentos (largura 7m)
       const area3 = m3Asfalto / 0.03;
       const area4 = m3Asfalto / 0.04;
       const area5 = m3Asfalto / 0.05;
@@ -365,26 +318,51 @@
       const comp4 = area4 / 7;
       const comp5 = area5 / 7;
 
-      // Custos unitários
       const custoM3Total = custoTonTotal / r.m3PorTon;
       const custoM2_3 = custoM3Total * 0.03;
       const custoM2_4 = custoM3Total * 0.04;
       const custoM2_5 = custoM3Total * 0.05;
 
-      // Valor por tonelada de cada item (para exibir em Custos Totais)
-      // Areia: converter R$/m³ para R$/t via densidade (t/m³)
-      const valorTonAreia = densAreia > 0 ? (precoM3Areia / densAreia) : 0;
+      // Traço por 1 t de mistura (em toneladas)
+      const tBritaPorTonMist   = fracBrita;
+      const tPoPorTonMist      = fracPo;
+      const tAreiaPorTonMist   = fracAreia;
+      const tEmulsaoPorTonMist = fracEmulsao;
+
+      // ===============================
+      // CENÁRIO 2: APENAS INSUMOS (sem M.O.)
+      // ===============================
+      const toneladasMisturaInsumos = valorDisponivel / custoTonMateriais;
+      const m3AsfaltoInsumos = toneladasMisturaInsumos * r.m3PorTon;
+
+      const tBrita_Insumos   = toneladasMisturaInsumos * fracBrita;
+      const tPo_Insumos      = toneladasMisturaInsumos * fracPo;
+      const tAreia_Insumos   = toneladasMisturaInsumos * fracAreia;
+      const tEmulsao_Insumos = toneladasMisturaInsumos * fracEmulsao;
+
+      const volumeAreiaTotalM3_Insumos = tAreia_Insumos / densAreia;
+
+      const valorBrita_Insumos   = tBrita_Insumos * precoTonBrita;
+      const valorPo_Insumos      = tPo_Insumos * precoTonPo;
+      const valorAreia_Insumos   = volumeAreiaTotalM3_Insumos * precoM3Areia;
+      const valorEmulsao_Insumos = tEmulsao_Insumos * precoTonEmulsao;
+
+      const totalInsumosApenas = valorBrita_Insumos + valorPo_Insumos + valorAreia_Insumos + valorEmulsao_Insumos;
+
+      const area3_Insumos = m3AsfaltoInsumos / 0.03;
+      const area4_Insumos = m3AsfaltoInsumos / 0.04;
+      const area5_Insumos = m3AsfaltoInsumos / 0.05;
+
+      const comp3_Insumos = area3_Insumos / 7;
+      const comp4_Insumos = area4_Insumos / 7;
+      const comp5_Insumos = area5_Insumos / 7;
 
       document.getElementById('resultado').innerHTML = `
         <h3 style="margin-top:0;">Resultados</h3>
-
         <table>
+          <tr><th class="left">Indicador</th><th>Valor</th></tr>
           <tr>
-            <th class="left">Indicador</th>
-            <th>Valor</th>
-          </tr>
-          <tr>
-            <td class="left"><strong>Produção estimada</strong></td>
+            <td class="left"><strong>Produção estimada</strong> (materiais + mão de obra)</td>
             <td>${formatarBR(m3Asfalto)} m³ (${formatarBR(toneladasMistura)} t de mistura)</td>
           </tr>
           <tr>
@@ -395,98 +373,37 @@
 
         <h3>Traço por tonelada de mistura (em toneladas)</h3>
         <table>
-          <tr>
-            <th class="left">Componente</th>
-            <th>t por 1 t de mistura</th>
-          </tr>
-          <tr>
-            <td class="left">Brita 0</td>
-            <td>${formatarBR(tBritaPorTonMist)}</td>
-          </tr>
-          <tr>
-            <td class="left">Pó de Pedra</td>
-            <td>${formatarBR(tPoPorTonMist)}</td>
-          </tr>
-          <tr>
-            <td class="left">Areia</td>
-            <td>${formatarBR(tAreiaPorTonMist)}</td>
-          </tr>
-          <tr>
-            <td class="left">Emulsão RL-1C</td>
-            <td>${formatarBR(tEmulsaoPorTonMist)}</td>
-          </tr>
+          <tr><th class="left">Componente</th><th>t por 1 t de mistura</th></tr>
+          <tr><td class="left">Brita 0</td><td>${formatarBR(tBritaPorTonMist)}</td></tr>
+          <tr><td class="left">Pó de Pedra</td><td>${formatarBR(tPoPorTonMist)}</td></tr>
+          <tr><td class="left">Areia</td><td>${formatarBR(tAreiaPorTonMist)}</td></tr>
+          <tr><td class="left">Emulsão RL-1C</td><td>${formatarBR(tEmulsaoPorTonMist)}</td></tr>
         </table>
 
         <h3>Áreas pavimentadas a 7 metros de largura</h3>
         <table>
-          <tr>
-            <th>Espessura</th>
-            <th>Área (m²)</th>
-            <th>Extensão (m)</th>
-          </tr>
-          <tr>
-            <td>3 cm</td>
-            <td>${formatarBR(area3)}</td>
-            <td>${formatarBR(comp3)}</td>
-          </tr>
-          <tr>
-            <td>4 cm</td>
-            <td>${formatarBR(area4)}</td>
-            <td>${formatarBR(comp4)}</td>
-          </tr>
-          <tr>
-            <td>5 cm</td>
-            <td>${formatarBR(area5)}</td>
-            <td>${formatarBR(comp5)}</td>
-          </tr>
+          <tr><th>Espessura</th><th>Área (m²)</th><th>Extensão (m)</th></tr>
+          <tr><td>3 cm</td><td>${formatarBR(area3)}</td><td>${formatarBR(comp3)}</td></tr>
+          <tr><td>4 cm</td><td>${formatarBR(area4)}</td><td>${formatarBR(comp4)}</td></tr>
+          <tr><td>5 cm</td><td>${formatarBR(area5)}</td><td>${formatarBR(comp5)}</td></tr>
         </table>
 
         <h3>Custos</h3>
         <table>
-          <tr>
-            <th class="left">Item</th>
-            <th>Valor</th>
-          </tr>
-          <tr>
-            <td class="left">Custo por tonelada (apenas materiais)</td>
-            <td>R$ ${formatarBR(custoTonMateriais)}</td>
-          </tr>
-          <tr>
-            <td class="left">Custo por tonelada (materiais + mão de obra)</td>
-            <td>R$ ${formatarBR(custoTonTotal)}</td>
-          </tr>
-          <tr>
-            <td class="left">Custo por m³ (total)</td>
-            <td>R$ ${formatarBR(custoM3Total)}</td>
-          </tr>
-          <tr>
-            <td class="left">Custo por m² (3 cm)</td>
-            <td>R$ ${formatarBR(custoM2_3)}</td>
-          </tr>
-          <tr>
-            <td class="left">Custo por m² (4 cm)</td>
-            <td>R$ ${formatarBR(custoM2_4)}</td>
-          </tr>
-          <tr>
-            <td class="left">Custo por m² (5 cm)</td>
-            <td>R$ ${formatarBR(custoM2_5)}</td>
-          </tr>
+          <tr><th class="left">Item</th><th>Valor</th></tr>
+          <tr><td class="left">Custo por tonelada (apenas materiais)</td><td>R$ ${formatarBR(custoTonMateriais)}</td></tr>
+          <tr><td class="left">Custo por tonelada (materiais + mão de obra)</td><td>R$ ${formatarBR(custoTonTotal)}</td></tr>
+          <tr><td class="left">Custo por m³ (total)</td><td>R$ ${formatarBR(custoM3Total)}</td></tr>
+          <tr><td class="left">Custo por m² (3 cm)</td><td>R$ ${formatarBR(custoM2_3)}</td></tr>
+          <tr><td class="left">Custo por m² (4 cm)</td><td>R$ ${formatarBR(custoM2_4)}</td></tr>
+          <tr><td class="left">Custo por m² (5 cm)</td><td>R$ ${formatarBR(custoM2_5)}</td></tr>
         </table>
 
         <h3>Custos da Mão de Obra</h3>
         <table>
-          <tr>
-            <th class="left">Item</th>
-            <th>Valor</th>
-          </tr>
-          <tr>
-            <td class="left">Percentual aplicado</td>
-            <td>${formatarBR(percMaoDeObra * 100)} %</td>
-          </tr>
-          <tr>
-            <td class="left">Valor total da mão de obra</td>
-            <td>R$ ${formatarBR(valorMaoDeObra)}</td>
-          </tr>
+          <tr><th class="left">Item</th><th>Valor</th></tr>
+          <tr><td class="left">Percentual aplicado</td><td>${formatarBR(percMaoDeObra * 100)} %</td></tr>
+          <tr><td class="left">Valor total da mão de obra</td><td>R$ ${formatarBR(valorMaoDeObra)}</td></tr>
         </table>
 
         <h3>Custos Totais</h3>
@@ -536,14 +453,10 @@
         </table>
 
         <h3>Cenário: Orçamento aplicado apenas na compra de insumos (sem mão de obra)</h3>
-
         <table>
+          <tr><th class="left">Indicador</th><th>Valor</th></tr>
           <tr>
-            <th class="left">Indicador</th>
-            <th>Valor</th>
-          </tr>
-          <tr>
-            <td class="left"><strong>Produção estimada (somente insumos)</strong></td>
+            <td class="left"><strong>Produção estimada</strong> (somente insumos)</td>
             <td>${formatarBR(m3AsfaltoInsumos)} m³ (${formatarBR(toneladasMisturaInsumos)} t de mistura)</td>
           </tr>
           <tr>
@@ -551,7 +464,7 @@
             <td>R$ ${formatarBR(valorDisponivel)}</td>
           </tr>
         </table>
-        
+
         <h4 style="margin:8px 0 0;">Custos Totais (somente insumos)</h4>
         <table>
           <tr>
@@ -589,35 +502,16 @@
             <td>R$ ${formatarBR(totalInsumosApenas)}</td>
           </tr>
         </table>
-        
+
         <h4 style="margin:8px 0 0;">Áreas pavimentadas a 7 metros de largura (somente insumos)</h4>
         <table>
-          <tr>
-            <th>Espessura</th>
-            <th>Área (m²)</th>
-            <th>Extensão (m)</th>
-          </tr>
-          <tr>
-            <td>3 cm</td>
-            <td>${formatarBR(area3_Insumos)}</td>
-            <td>${formatarBR(comp3_Insumos)}</td>
-          </tr>
-          <tr>
-            <td>4 cm</td>
-            <td>${formatarBR(area4_Insumos)}</td>
-            <td>${formatarBR(comp4_Insumos)}</td>
-          </tr>
-          <tr>
-            <td>5 cm</td>
-            <td>${formatarBR(area5_Insumos)}</td>
-            <td>${formatarBR(comp5_Insumos)}</td>
-          </tr>
+          <tr><th>Espessura</th><th>Área (m²)</th><th>Extensão (m)</th></tr>
+          <tr><td>3 cm</td><td>${formatarBR(area3_Insumos)}</td><td>${formatarBR(comp3_Insumos)}</td></tr>
+          <tr><td>4 cm</td><td>${formatarBR(area4_Insumos)}</td><td>${formatarBR(comp4_Insumos)}</td></tr>
+          <tr><td>5 cm</td><td>${formatarBR(area5_Insumos)}</td><td>${formatarBR(comp5_Insumos)}</td></tr>
         </table>
-
       `;
     }
   </script>
 </body>
 </html>
-
-
