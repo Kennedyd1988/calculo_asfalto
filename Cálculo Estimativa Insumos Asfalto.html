@@ -5,12 +5,7 @@
   <title>Calculadora de Produção de Asfalto</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #f4f4f4;
-    }
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f4f4f4; }
     .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
 
     h2 { font-size: 1.5rem; text-align: center; margin-bottom: 8px; }
@@ -58,7 +53,6 @@
     }
     .muted { color:#555; font-size: .86rem; text-align:center; margin-top:8px; }
 
-    /* Tabelas */
     table { width:100%; border-collapse: collapse; margin:10px 0 16px; font-size:0.95rem; }
     th, td { border:1px solid #ddd; padding:10px; text-align:center; }
     th { background:#f2f2f2; font-weight:700; }
@@ -77,33 +71,35 @@
     <h2>Calculadora de Produção de Asfalto</h2>
     <p>Informe o orçamento, ajuste o traço, preços e calcule a produção estimada.</p>
 
-    <!-- Valor disponível -->
     <div class="card">
       <label for="valorDisponivel">Valor disponível (R$)</label>
       <input type="text" id="valorDisponivel" placeholder="Ex: 50.000,00" inputmode="numeric" />
     </div>
 
-    <!-- Traço do agregado -->
     <div class="card">
       <h3 style="margin:0 0 10px 0; font-size:1.05rem;">Traço do agregado (editável)</h3>
       <div class="grid" style="margin-bottom:10px;">
         <div class="col-4">
           <label for="percBrita">Brita 5/8 (% sobre o agregado)</label>
-          <input type="number" id="percBrita" value="40.0" step="0.1" />
+          <!-- AJUSTADO: 28,5% -->
+          <input type="number" id="percBrita" value="28.5" step="0.1" />
         </div>
         <div class="col-4">
           <label for="percPo">Pó de pedra (% sobre o agregado)</label>
-          <input type="number" id="percPo" value="42.0" step="0.1" />
+          <!-- AJUSTADO: 43% -->
+          <input type="number" id="percPo" value="43.0" step="0.1" />
         </div>
         <div class="col-4">
           <label for="percAreia">Areia (% sobre o agregado)</label>
-          <input type="number" id="percAreia" value="18.0" step="0.1" />
+          <!-- AJUSTADO: 28,5% -->
+          <input type="number" id="percAreia" value="28.5" step="0.1" />
         </div>
       </div>
 
       <div class="grid">
         <div class="col-4">
           <label for="percEmulsao">% Emulsão RL-1C (sobre o agregado)</label>
+          <!-- MANTIDO: emulsão na mesma proporção -->
           <input type="number" id="percEmulsao" min="0" max="20" step="0.1" value="9" />
         </div>
       </div>
@@ -114,7 +110,6 @@
       </p>
     </div>
 
-    <!-- Parâmetros econômicos -->
     <div class="card">
       <h3 style="margin:0 0 10px 0; font-size:1.05rem;">Parâmetros econômicos (editáveis)</h3>
       <div class="grid" style="margin-bottom:8px;">
@@ -153,12 +148,10 @@
       </p>
     </div>
 
-    <!-- Botão -->
     <div class="card">
       <button id="btnCalcular">Calcular</button>
     </div>
 
-    <!-- Resultado -->
     <div id="resultado" class="result"></div>
 
     <p class="muted">
@@ -217,6 +210,7 @@
       const massaPo     = A * percPo     * fator;
       const massaAreia  = A * percAreia  * fator;
 
+      // Mantém a mesma regra existente (9% => 90 kg, etc.)
       const massaEmulsao = percEmulsao * 10;
       const massaMistura = A + massaEmulsao;
 
@@ -251,22 +245,18 @@
         return;
       }
 
-      // Traço
       const percBrita   = Number(document.getElementById("percBrita").value)   || 0;
       const percPo      = Number(document.getElementById("percPo").value)      || 0;
       const percAreia   = Number(document.getElementById("percAreia").value)   || 0;
       const percEmulsao = Number(document.getElementById("percEmulsao").value) || 0;
 
-      // Preços
       const precoTonBrita   = desformatarBR(document.getElementById("precoBrita").value);
       const precoTonPo      = desformatarBR(document.getElementById("precoPo").value);
       const precoM3Areia    = desformatarBR(document.getElementById("precoAreia").value);
       const precoTonEmulsao = desformatarBR(document.getElementById("precoEmulsao").value);
 
-      // Densidade da areia
       const densAreia = Number(document.getElementById("densAreia").value) || 1.5;
 
-      // % mão de obra
       const percMaoDeObra = (Number(document.getElementById("percMaoDeObra").value) || 0) / 100;
 
       const r = calcularLote({
@@ -275,22 +265,16 @@
         densAreia
       });
 
-      // Frações (tem que vir ANTES dos cenários)
       const fracBrita   = r.massaBrita   / r.massaMistura;
       const fracPo      = r.massaPo      / r.massaMistura;
       const fracAreia   = r.massaAreia   / r.massaMistura;
       const fracEmulsao = r.massaEmulsao / r.massaMistura;
 
-      // Custos por tonelada
       const custoTonMateriais = r.custoTonMisturaMateriais;
       const custoTonTotal = custoTonMateriais * (1 + percMaoDeObra);
 
-      // Areia: preço equivalente em R$/t (apenas para exibição)
       const valorTonAreia = densAreia > 0 ? (precoM3Areia / densAreia) : 0;
 
-      // =========================
-      // CENÁRIO 1: COM MÃO DE OBRA
-      // =========================
       const toneladasMistura = valorDisponivel / custoTonTotal;
       const m3Asfalto = toneladasMistura * r.m3PorTon;
 
@@ -323,15 +307,11 @@
       const custoM2_4 = custoM3Total * 0.04;
       const custoM2_5 = custoM3Total * 0.05;
 
-      // Traço por 1 t de mistura (em toneladas)
       const tBritaPorTonMist   = fracBrita;
       const tPoPorTonMist      = fracPo;
       const tAreiaPorTonMist   = fracAreia;
       const tEmulsaoPorTonMist = fracEmulsao;
 
-      // ===============================
-      // CENÁRIO 2: APENAS INSUMOS (sem M.O.)
-      // ===============================
       const toneladasMisturaInsumos = valorDisponivel / custoTonMateriais;
       const m3AsfaltoInsumos = toneladasMisturaInsumos * r.m3PorTon;
 
@@ -515,4 +495,3 @@
   </script>
 </body>
 </html>
-
